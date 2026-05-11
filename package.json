@@ -1,0 +1,124 @@
+{
+  "name": "box",
+  "version": "1.0.0",
+  "description": "Unified entry point for Box JavaScript/TypeScript development tools - SDK and CLI",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "browser": "./dist/esm/index.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "browser": "./dist/esm/index.js",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./sdk": {
+      "types": "./dist/types/sdk/index.d.ts",
+      "browser": "./dist/esm/sdk/index.js",
+      "import": "./dist/esm/sdk/index.js",
+      "require": "./dist/cjs/sdk/index.js",
+      "default": "./dist/esm/sdk/index.js"
+    },
+    "./sdk/managers": {
+      "types": "./dist/types/sdk/managers.d.ts",
+      "browser": "./dist/esm/sdk/managers.js",
+      "import": "./dist/esm/sdk/managers.js",
+      "require": "./dist/cjs/sdk/managers.js",
+      "default": "./dist/esm/sdk/managers.js"
+    },
+    "./sdk/schemas": {
+      "types": "./dist/types/sdk/schemas.d.ts",
+      "browser": "./dist/esm/sdk/schemas.js",
+      "import": "./dist/esm/sdk/schemas.js",
+      "require": "./dist/cjs/sdk/schemas.js",
+      "default": "./dist/esm/sdk/schemas.js"
+    },
+    "./sdk/parameters": {
+      "types": "./dist/types/sdk/parameters.d.ts",
+      "browser": "./dist/esm/sdk/parameters.js",
+      "import": "./dist/esm/sdk/parameters.js",
+      "require": "./dist/cjs/sdk/parameters.js",
+      "default": "./dist/esm/sdk/parameters.js"
+    },
+    "./sdk/networking": {
+      "types": "./dist/types/sdk/networking.d.ts",
+      "browser": "./dist/esm/sdk/networking.js",
+      "import": "./dist/esm/sdk/networking.js",
+      "require": "./dist/cjs/sdk/networking.js",
+      "default": "./dist/esm/sdk/networking.js"
+    },
+    "./sdk/serialization": {
+      "types": "./dist/types/sdk/serialization.d.ts",
+      "browser": "./dist/esm/sdk/serialization.js",
+      "import": "./dist/esm/sdk/serialization.js",
+      "require": "./dist/cjs/sdk/serialization.js",
+      "default": "./dist/esm/sdk/serialization.js"
+    },
+    "./sdk/internal": {
+      "types": "./dist/types/sdk/internal.d.ts",
+      "browser": "./dist/esm/sdk/internal.js",
+      "import": "./dist/esm/sdk/internal.js",
+      "require": "./dist/cjs/sdk/internal.js",
+      "default": "./dist/esm/sdk/internal.js"
+    }
+  },
+  "bin": {
+    "box": "./node_modules/@box/cli/bin/run"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist/types",
+    "postbuild": "node scripts/postbuild.cjs",
+    "postinstall": "node scripts/postinstall.js",
+    "test": "jest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "box",
+    "box-sdk",
+    "box-cli",
+    "sdk",
+    "cli",
+    "api",
+    "typescript"
+  ],
+  "author": "Box <oss@box.com>",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/box/box-npm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/box/box-npm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/box/box-npm/issues"
+  },
+  "dependencies": {
+    "box-node-sdk": "^10.9.0",
+    "@box/cli": "^4.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
+    "@typescript-eslint/parser": "^8.59.3",
+    "eslint": "^10.3.0",
+    "jest": "^30.4.2",
+    "typescript": "^6.0.3"
+  },
+  "files": [
+    "dist",
+    "scripts",
+    "LICENSE",
+    "README.md"
+  ]
+}
