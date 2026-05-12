@@ -95,13 +95,13 @@
   ],
   "author": "Box <oss@box.com>",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/box/box-npm",
+  "homepage": "https://github.com/box/npm-box",
   "repository": {
     "type": "git",
-    "url": "https://github.com/box/box-npm.git"
+    "url": "https://github.com/box/npm-box.git"
   },
   "bugs": {
-    "url": "https://github.com/box/box-npm/issues"
+    "url": "https://github.com/box/npm-box/issues"
   },
   "dependencies": {
     "box-node-sdk": "^10.9.0",
@@ -119,6 +119,7 @@
     "dist",
     "scripts",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "llms.txt"
   ]
 }

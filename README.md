@@ -1,40 +1,69 @@
 # Box
 
-Unified entry point for Box JavaScript/TypeScript development tools - SDK and CLI.
+Curated meta-package for building on Box with JavaScript and TypeScript: one install surface anchored on the official SDK (and CLI), structured so additional Box developer tools can ship here over time.
+
+> **For AI Agents & LLMs**: See [`llms.txt`](./llms.txt) for complete usage guide.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Box](#box)
+  - [Installation](#installation)
+  - [Getting Started](#getting-started)
+  - [Usage](#usage)
+    - [Import from `box`](#import-from-box)
+    - [Box SDK (Node.js)](#box-sdk-nodejs)
+  - [CLI Tool](#cli-tool)
+  - [Requirements](#requirements)
+  - [Features](#features)
+  - [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Questions, Bugs, and Feature Requests?](#questions-bugs-and-feature-requests)
+- [Copyright and License](#copyright-and-license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Installation
+
+Add the `box` package to your project to use the [Box SDK](#box-sdk-nodejs) via subpath imports and the [`box` CLI](#cli-tool). Pick the command for your package manager:
+
+**npm**
 
 ```bash
 npm install box
 ```
 
+**Yarn**
+
+```bash
+yarn add box
+```
+
+## Getting Started
+
+The `box` package is a thin meta-package: it does not hide a new API. It exposes **official Box tools** through a small set of entry points so you can install once and stay on supported combinations of versions.
+
+**At a glance**
+
+- **CLI** — The `box` executable comes from `@box/cli` (Box CLI). Run it with your package manager’s usual patterns, for example `npx box`, `yarn box`, or `pnpm exec box` after a local install, or ephemeral runs such as `pnpm dlx box` / `yarn dlx box` when you prefer not to add a dependency first.
+- **Node SDK** — The [Box Node SDK](https://github.com/box/box-node-sdk/tree/main/docs) (`box-node-sdk`) is available under the `box/sdk` subpath and nested `box/sdk/*` imports (see [Usage](#usage)).
+
+**Export architecture (current surfaces)**
+
+| Surface | Upstream | How you use it |
+| --- | --- | --- |
+| **CLI** | `@box/cli` | Shell: `npx box …`, `yarn box …`, `pnpm exec box …`, or other package-manager equivalents; same binary whether `box` is a project dependency or pulled ad hoc. |
+| **Node SDK** | `box-node-sdk` | `import` / `require` from `box/sdk`, `box/sdk/managers`, `box/sdk/schemas`, etc. (see [Import from `box`](#import-from-box)). |
+
+More rows will be added to the table above as additional Box developer tools are bundled into this package.
+
 ## Usage
 
 This is a **namespace package**. Import specific modules using subpath imports:
 
-### Box SDK (Node.js)
+### Import from `box`
 
-```typescript
-// Main SDK exports
-import { BoxClient, BoxCcgAuth, BoxJwtAuth } from 'box/sdk';
-
-// API Managers
-import { FilesManager, FoldersManager } from 'box/sdk/managers';
-
-// Schema types
-import { File, Folder } from 'box/sdk/schemas';
-
-// API parameters
-import { GetFileByIdParams } from 'box/sdk/parameters';
-
-// Network utilities
-import { NetworkSession } from 'box/sdk/networking';
-
-// Serialization utilities
-import { serializeDateTime } from 'box/sdk/serialization';
-```
-
-### ❌ Don't Import from Root
+The npm package name is `box`, but the **root entry has no exports**. Use subpath imports such as `box/sdk`:
 
 ```typescript
 // ❌ This won't work - root has no exports
@@ -44,7 +73,7 @@ import something from 'box';
 import { BoxClient } from 'box/sdk';
 ```
 
-## Available Subpaths
+**Available subpaths**
 
 | Subpath | Description |
 |---------|-------------|
@@ -56,6 +85,27 @@ import { BoxClient } from 'box/sdk';
 | `box/sdk/serialization` | Serialization and deserialization utilities |
 | `box/sdk/internal` | Internal utilities (advanced use) |
 
+### Box SDK (Node.js)
+
+The official **[Box Node SDK](https://github.com/box/box-node-sdk)** (`box-node-sdk`) is re-exported from **`box/sdk`**. The other `box/sdk/*` paths in the table above map to the same SDK (managers, schemas, parameters, and so on).
+
+**Example**
+```typescript
+import { BoxClient, BoxDeveloperTokenAuth } from 'box/sdk';
+
+async function main() {
+  const token = '<YOUR_DEVELOPER_TOKEN>';
+  const auth = new BoxDeveloperTokenAuth({ token });
+  const client = new BoxClient({ auth });
+  const entries = (await client.folders.getFolderItems('0')).entries;
+  entries.forEach((entry) => console.log(entry));
+}
+
+void main();
+```
+
+Replace the placeholder with **a real developer token**, or use another `*Auth` class from `box/sdk` (for example `BoxCcgAuth`, `BoxJwtAuth`) as in the [Box Node SDK docs](https://github.com/box/box-node-sdk/tree/main/docs).
+
 ## CLI Tool
 
 This package also includes the Box CLI:
@@ -64,6 +114,8 @@ This package also includes the Box CLI:
 npx box --help
 ```
 
+Command and topic guides live in the [Box CLI docs](https://github.com/box/boxcli/tree/main/docs) in the upstream repo.
+
 ## Requirements
 
 - **Node.js**: 22.0.0 or higher
@@ -71,23 +123,42 @@ npx box --help
 
 ## Features
 
-- ✅ **Dual ESM/CJS support** - Works with both `import` and `require()`
-- ✅ **Full TypeScript support** - Complete type definitions
-- ✅ **Tree-shaking compatible** - Only bundle what you use
-- ✅ **Browser compatible** - ESM builds work in modern browsers
-- ✅ **Zero runtime overhead** - Pure re-exports of official packages
+- **Dual ESM/CJS support** - Works with both `import` and `require()`
+- **Full TypeScript support** - Complete type definitions
+- **Tree-shaking compatible** - Only bundle what you use
+- **Browser compatible** - ESM builds work in modern browsers
+- **Zero runtime overhead** - Pure re-exports of official packages
 
 ## Documentation
 
-- [Box Node SDK Documentation](https://github.com/box/box-node-sdk)
+- **[llms.txt](./llms.txt)** - Complete guide for AI agents and LLMs
+- [Box Node SDK docs](https://github.com/box/box-node-sdk/tree/main/docs)
 - [Box Platform API Reference](https://developer.box.com/reference/)
-- [Box CLI Documentation](https://github.com/box/boxcli)
+- [Box CLI docs](https://github.com/box/boxcli/tree/main/docs)
 
-## License
 
-Apache-2.0
+# Contributing
 
-## Support
+For information on how to contribute to this project, please see [the Contribution guidelines](./CONTRIBUTING.md).
 
-- [GitHub Issues](https://github.com/box/box-npm/issues)
-- [Box Developer Forum](https://forum.box.com/)
+# Questions, Bugs, and Feature Requests?
+
+Need to contact us directly? [Browse the issues tickets](https://github.com/box/npm-box/issues)! Or, if that
+doesn't work, [file a new one](https://github.com/box/npm-box/issues/new) and we will get
+back to you. If you have general questions about the Box API, you can post to the [Box Developer Forum](https://community.box.com/box-platform-5).
+
+# Copyright and License
+
+Copyright 2026 Box, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
