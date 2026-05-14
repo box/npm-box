@@ -1,0 +1,38 @@
+name: Question
+description: Ask a question about usage or implementation
+title: "[Question]: "
+labels: ["question"]
+assignees:
+  - mwwoda
+  - arjankowski
+  - lukaszsocha2
+  - bartlomiejleszczynski
+  - congminh1254
+  - Hawra2020
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What are you trying to accomplish? What have you tried?
+      placeholder: I'm trying to...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Code examples, version info, or any other helpful details
+      placeholder: Any additional details...
+    validations:
+      required: false

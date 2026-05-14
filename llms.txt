@@ -1,0 +1,785 @@
+# Box Package - Complete Guide for AI Agents and LLMs
+
+> This file contains everything AI assistants need to use the Box package correctly.
+> Format: llms.txt standard (https://llmstxt.org/)
+
+## CRITICAL INFORMATION
+
+**Package Name**: box (npm)
+**Type**: Meta-package / namespace package — re-exports official Box libraries
+**Node.js Requirement**: >=22.0.0
+
+**SDK mapping**: `import … from 'box/sdk'` (and `box/sdk/managers`, `box/sdk/schemas`, etc.) is the **same public API** as the `box-node-sdk` package. This repo adds export maps and packaging only; behavior and types come from upstream.
+
+**CLI**: The same dependency installs the **`box`** shell command from `@box/cli` (Box CLI). Use it for admin-style tasks; use `box/sdk` in code for the HTTP API.
+
+**⚠️ MOST IMPORTANT RULE FOR AI AGENTS:**
+NEVER import from root `'box'` — it has NO application exports (only package metadata / tooling wiring).
+ALWAYS use subpath imports: `'box/sdk'`, `'box/sdk/managers'`, etc.
+
+## QUICK START (30 seconds)
+
+```typescript
+// Step 1: Install (npm or yarn)
+// npm install box
+// yarn add box
+
+// Step 2: Import (ALWAYS from subpath — same as box-node-sdk)
+import { BoxClient, BoxCcgAuth } from 'box/sdk';
+
+// Step 3: Authenticate
+const auth = new BoxCcgAuth({
+  clientId: process.env.BOX_CLIENT_ID!,
+  clientSecret: process.env.BOX_CLIENT_SECRET!,
+  enterpriseId: process.env.BOX_ENTERPRISE_ID!
+});
+
+// Step 4: Create client
+const client = new BoxClient({ auth });
+
+// Step 5: Use API
+const file = await client.files.getFileById('123456789');
+console.log(`File: ${file.name}`);
+```
+
+## IMPORT PATTERNS
+
+### ✅ CORRECT (Always do this)
+```typescript
+import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { FilesManager } from 'box/sdk/managers';
+import type { File, Folder } from 'box/sdk/schemas';
+```
+
+### ❌ WRONG (Never do this)
+```typescript
+import something from 'box';  // ERROR: No exports!
+import { BoxClient } from 'box';  // ERROR: Wrong path!
+```
+
+## BOX CLI (same `box` package)
+
+Installing `box` also wires the **`box`** executable from **`@box/cli`**. Typical invocations:
+
+- `npx box --help` (npm / when the package is available on `PATH`)
+- With a project dependency: `yarn box --help`, `pnpm exec box --help`, etc.
+- One-off without saving to package.json: `pnpm dlx box` or `yarn dlx box` (behavior depends on Yarn/pnpm version)
+
+Authoritative command docs: https://github.com/box/boxcli/tree/main/docs
+
+For programmatic access to Box APIs in Node/TypeScript, use **`box/sdk`**, not CLI subprocesses, unless you intentionally shell out.
+
+## ALL AVAILABLE SUBPATHS
+
+| Import Path | What It Exports | When to Use |
+|-------------|----------------|-------------|
+| box/sdk | BoxClient, BoxCcgAuth, BoxJwtAuth, BoxDeveloperTokenAuth, BoxOAuth | ALWAYS - Main entry point |
+| box/sdk/managers | FilesManager, FoldersManager, UsersManager, SearchManager, etc. | TypeScript: type annotations for managers |
+| box/sdk/schemas | File, Folder, User, FileVersion, etc. | TypeScript: type annotations for data models |
+| box/sdk/parameters | GetFileByIdParams, UploadFileParams, etc. | TypeScript: type annotations for API params |
+| box/sdk/networking | NetworkSession, NetworkClient | Advanced: custom network config |
+| box/sdk/serialization | serializeDateTime, deserializeDateTime | Advanced: custom serialization |
+| box/sdk/internal | Internal utilities | Rarely needed |
+
+## AUTHENTICATION (Choose One Method)
+
+### 1. Client Credentials Grant (CCG) - Most Common
+**Use for**: Server-to-server integrations
+
+```typescript
+import { BoxCcgAuth } from 'box/sdk';
+
+const auth = new BoxCcgAuth({
+  clientId: 'your_client_id',
+  clientSecret: 'your_client_secret',
+  enterpriseId: 'your_enterprise_id',
+  // Optional: act as specific user
+  userId: 'user_id'
+});
+```
+
+### 2. JWT Authentication
+**Use for**: Enterprise-wide access, service accounts
+
+```typescript
+import { BoxJwtAuth } from 'box/sdk';
+
+const auth = new BoxJwtAuth({
+  clientId: 'your_client_id',
+  clientSecret: 'your_client_secret',
+  enterpriseId: 'your_enterprise_id',
+  jwtKeyId: 'your_jwt_key_id',
+  privateKey: 'your_private_key',
+  privateKeyPassphrase: 'your_passphrase'
+});
+```
+
+### 3. Developer Token
+**Use for**: Testing and development ONLY (tokens expire in 60 minutes)
+
+```typescript
+import { BoxDeveloperTokenAuth } from 'box/sdk';
+
+const auth = new BoxDeveloperTokenAuth({
+  token: 'your_developer_token'
+});
+```
+
+### 4. OAuth 2.0
+**Use for**: User-facing applications, web apps
+
+```typescript
+import { BoxOAuth } from 'box/sdk';
+
+const oauth = new BoxOAuth({
+  clientId: 'your_client_id',
+  clientSecret: 'your_client_secret'
+});
+
+// Get authorization URL
+const authUrl = oauth.getAuthorizeUrl({
+  redirectUri: 'http://localhost:3000/callback',
+  state: 'security_token'
+});
+
+// After user authorizes, exchange code for tokens
+const tokens = await oauth.getTokensAuthorizationCodeGrant(
+  'authorization_code',
+  'client_id'
+);
+
+const client = new BoxClient({ auth: oauth });
+```
+
+## COMMON OPERATIONS CHEAT SHEET
+
+### File Operations
+
+```typescript
+// Get file info
+const file = await client.files.getFileById('FILE_ID');
+console.log(`Name: ${file.name}, Size: ${file.size}`);
+
+// Get file with specific fields
+const fileWithFields = await client.files.getFileById('FILE_ID', {
+  fields: ['name', 'size', 'modified_at', 'created_by']
+});
+
+// Upload file
+import { readFileSync } from 'fs';
+const fileBuffer = readFileSync('./document.pdf');
+const uploaded = await client.uploads.uploadFile({
+  attributes: {
+    name: 'document.pdf',
+    parent: { id: '0' }  // 0 = root folder
+  },
+  file: fileBuffer
+});
+
+// Download file
+const fileContent = await client.downloads.downloadFile('FILE_ID');
+// fileContent is a Buffer
+
+// Update file
+const updated = await client.files.updateFileById('FILE_ID', {
+  name: 'new-name.pdf',
+  description: 'Updated via API'
+});
+
+// Delete file
+await client.files.deleteFileById('FILE_ID');
+
+// Copy file
+const copied = await client.files.copyFile('FILE_ID', {
+  parent: { id: 'DEST_FOLDER_ID' },
+  name: 'copy-of-file.pdf'
+});
+
+// Move file (update parent)
+await client.files.updateFileById('FILE_ID', {
+  parent: { id: 'NEW_FOLDER_ID' }
+});
+
+// Get file versions
+const versions = await client.files.getFileVersions('FILE_ID');
+for (const version of versions.entries || []) {
+  console.log(`Version ${version.id}: ${version.modifiedAt}`);
+}
+```
+
+### Folder Operations
+
+```typescript
+// List folder contents
+const items = await client.folders.getFolderItems('FOLDER_ID', {
+  limit: 100,
+  offset: 0,
+  fields: ['name', 'type', 'size']
+});
+for (const item of items.entries || []) {
+  console.log(`${item.type}: ${item.name} (${item.id})`);
+}
+
+// Create folder
+const folder = await client.folders.createFolder({
+  name: 'My New Folder',
+  parent: { id: '0' }  // 0 = root folder
+});
+
+// Update folder
+const updated = await client.folders.updateFolderById('FOLDER_ID', {
+  name: 'Renamed Folder',
+  description: 'New description'
+});
+
+// Delete folder (must be empty)
+await client.folders.deleteFolderById('FOLDER_ID');
+
+// Delete folder and contents
+await client.folders.deleteFolderById('FOLDER_ID', {
+  recursive: true
+});
+
+// Copy folder
+const copied = await client.folders.copyFolder('FOLDER_ID', {
+  parent: { id: 'DEST_FOLDER_ID' },
+  name: 'Copy of Folder'
+});
+```
+
+### Search
+
+```typescript
+// Basic search
+const results = await client.search.searchByQuery({
+  query: 'quarterly report',
+  limit: 20
+});
+for (const item of results.entries || []) {
+  console.log(`Found: ${item.name} (${item.type})`);
+}
+
+// Advanced search
+const results = await client.search.searchByQuery({
+  query: 'contract',
+  fileExtensions: ['pdf', 'docx'],
+  ancestorFolderIds: ['FOLDER_ID'],  // Search within folder
+  contentTypes: ['name', 'description', 'file_content'],
+  createdAtRange: ['2024-01-01T00:00:00Z', '2024-12-31T23:59:59Z'],
+  size: { gte: 1000000 },  // Files >= 1MB
+  ownerUserIds: ['USER_ID']
+});
+```
+
+### Sharing
+
+```typescript
+// Create shared link
+const file = await client.files.updateFileById('FILE_ID', {
+  sharedLink: {
+    access: 'open',  // 'open', 'company', 'collaborators'
+    permissions: {
+      canDownload: true,
+      canPreview: true
+    },
+    unsharedAt: '2024-12-31T23:59:59Z'  // Optional expiration
+  }
+});
+console.log('Shared link:', file.sharedLink?.url);
+
+// Remove shared link
+await client.files.updateFileById('FILE_ID', {
+  sharedLink: null
+});
+
+// Get item from shared link
+const item = await client.sharedLinks.getSharedItem({
+  sharedLink: 'https://app.box.com/s/...'
+});
+```
+
+### Collaboration
+
+```typescript
+// Add collaborator to folder
+const collab = await client.collaborations.createCollaboration({
+  item: {
+    type: 'folder',
+    id: 'FOLDER_ID'
+  },
+  accessibleBy: {
+    type: 'user',
+    id: 'USER_ID'
+  },
+  role: 'editor'  // viewer, previewer, uploader, editor, co-owner
+});
+
+// List folder collaborations
+const collabs = await client.folders.getFolderCollaborations('FOLDER_ID');
+for (const c of collabs.entries || []) {
+  console.log(`${c.accessibleBy?.name}: ${c.role}`);
+}
+
+// Remove collaboration
+await client.collaborations.deleteCollaborationById('COLLAB_ID');
+```
+
+### User Management
+
+```typescript
+// Get current user
+const user = await client.users.getUserMe();
+console.log(`Logged in as: ${user.name} (${user.login})`);
+
+// List enterprise users (requires admin)
+const users = await client.users.getUsers({ limit: 100 });
+for (const u of users.entries || []) {
+  console.log(`${u.name}: ${u.login}`);
+}
+
+// Create user (requires admin)
+const newUser = await client.users.createUser({
+  name: 'John Doe',
+  login: 'jdoe@example.com',
+  isPlatformAccessOnly: true
+});
+```
+
+### Metadata
+
+```typescript
+// Add metadata to file
+await client.files.createFileMetadataById(
+  'FILE_ID',
+  'enterprise',
+  'templateKey',
+  {
+    field1: 'value1',
+    field2: 123,
+    field3: '2024-01-15'
+  }
+);
+
+// Get metadata
+const metadata = await client.files.getFileMetadataById(
+  'FILE_ID',
+  'enterprise',
+  'templateKey'
+);
+
+// Update metadata
+await client.files.updateFileMetadataById(
+  'FILE_ID',
+  'enterprise',
+  'templateKey',
+  [
+    { op: 'replace', path: '/field1', value: 'new_value' },
+    { op: 'add', path: '/field4', value: 'value4' }
+  ]
+);
+```
+
+### Webhooks
+
+```typescript
+// Create webhook
+const webhook = await client.webhooks.createWebhook({
+  target: {
+    type: 'file',
+    id: 'FILE_ID'
+  },
+  address: 'https://example.com/webhook',
+  triggers: ['FILE.UPLOADED', 'FILE.DOWNLOADED', 'FILE.PREVIEWED']
+});
+
+// List webhooks
+const webhooks = await client.webhooks.getWebhooks();
+
+// Delete webhook
+await client.webhooks.deleteWebhookById('WEBHOOK_ID');
+```
+
+### Tasks and Comments
+
+```typescript
+// Create task
+const task = await client.tasks.createTask({
+  item: { type: 'file', id: 'FILE_ID' },
+  action: 'review',
+  message: 'Please review',
+  dueAt: '2024-12-31T23:59:59Z'
+});
+
+// Assign task
+await client.tasks.createTaskAssignment(task.id, {
+  assignTo: { id: 'USER_ID' }
+});
+
+// Add comment
+const comment = await client.comments.createComment({
+  item: { type: 'file', id: 'FILE_ID' },
+  message: 'Great work!'
+});
+
+// Get file comments
+const comments = await client.files.getFileComments('FILE_ID');
+```
+
+## ERROR HANDLING
+
+### Standard Pattern
+
+```typescript
+try {
+  const file = await client.files.getFileById('FILE_ID');
+  console.log(file.name);
+} catch (error: any) {
+  console.error('Error:', error.message);
+}
+```
+
+### Status Code Handling
+
+```typescript
+try {
+  const file = await client.files.getFileById('FILE_ID');
+} catch (error: any) {
+  switch (error.status) {
+    case 401:
+      console.error('Authentication failed - check credentials');
+      break;
+    case 403:
+      console.error('Access denied - check permissions');
+      break;
+    case 404:
+      console.error('File not found - check ID');
+      break;
+    case 429:
+      console.error('Rate limited - wait and retry');
+      // Implement exponential backoff
+      break;
+    default:
+      console.error('API error:', error.message);
+  }
+}
+```
+
+### Retry Logic for Rate Limiting
+
+```typescript
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3
+): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (i === maxRetries - 1) throw error;
+      if (error.status === 429) {
+        // Wait with exponential backoff
+        const delay = 1000 * Math.pow(2, i);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+
+// Usage
+const file = await withRetry(() =>
+  client.files.getFileById('FILE_ID')
+);
+```
+
+## TYPESCRIPT USAGE
+
+### Type Annotations
+
+```typescript
+import { BoxClient } from 'box/sdk';
+import type { File, Folder, User } from 'box/sdk/schemas';
+import type { FilesManager, FoldersManager } from 'box/sdk/managers';
+
+// Function with typed return
+async function getFile(client: BoxClient, id: string): Promise<File> {
+  return await client.files.getFileById(id);
+}
+
+// Type guards
+type BoxItem = File | Folder;
+
+function isFile(item: BoxItem): item is File {
+  return item.type === 'file';
+}
+
+function isFolder(item: BoxItem): item is Folder {
+  return item.type === 'folder';
+}
+
+// Using managers
+const filesManager: FilesManager = client.files;
+const foldersManager: FoldersManager = client.folders;
+```
+
+### Generic Helpers
+
+```typescript
+import type { File, Folder } from 'box/sdk/schemas';
+
+type BoxItem = File | Folder;
+
+function getItemName(item: BoxItem): string {
+  return item.name || 'Untitled';
+}
+
+function getItemId(item: BoxItem): string {
+  return item.id;
+}
+
+async function processItems<T extends BoxItem>(
+  items: T[],
+  processor: (item: T) => Promise<void>
+): Promise<void> {
+  for (const item of items) {
+    await processor(item);
+  }
+}
+```
+
+## COMPLETE WORKING EXAMPLES
+
+### Example 1: List and Upload Files
+
+```typescript
+import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { readFileSync } from 'fs';
+
+async function main() {
+  // Setup client
+  const client = new BoxClient({
+    auth: new BoxCcgAuth({
+      clientId: process.env.BOX_CLIENT_ID!,
+      clientSecret: process.env.BOX_CLIENT_SECRET!,
+      enterpriseId: process.env.BOX_ENTERPRISE_ID!
+    })
+  });
+
+  // Get current user
+  const user = await client.users.getUserMe();
+  console.log(`Hello, ${user.name}!`);
+
+  // List files in root
+  const items = await client.folders.getFolderItems('0', { limit: 10 });
+  console.log('\nYour files:');
+  for (const item of items.entries || []) {
+    console.log(`  ${item.type}: ${item.name}`);
+  }
+
+  // Upload a file
+  const fileBuffer = Buffer.from('Hello Box!', 'utf-8');
+  const uploaded = await client.uploads.uploadFile({
+    attributes: {
+      name: 'hello.txt',
+      parent: { id: '0' }
+    },
+    file: fileBuffer
+  });
+  console.log(`\nUploaded: ${uploaded.entries[0].name}`);
+}
+
+main().catch(console.error);
+```
+
+### Example 2: Search and Share
+
+```typescript
+import { BoxClient, BoxCcgAuth } from 'box/sdk';
+
+async function searchAndShare() {
+  const client = new BoxClient({
+    auth: new BoxCcgAuth({
+      clientId: process.env.BOX_CLIENT_ID!,
+      clientSecret: process.env.BOX_CLIENT_SECRET!,
+      enterpriseId: process.env.BOX_ENTERPRISE_ID!
+    })
+  });
+
+  // Search for PDF contracts
+  const results = await client.search.searchByQuery({
+    query: 'contract',
+    fileExtensions: ['pdf'],
+    limit: 5
+  });
+
+  console.log(`Found ${results.totalCount} contracts`);
+
+  // Share the first result
+  if (results.entries && results.entries.length > 0) {
+    const firstFile = results.entries[0];
+    if (firstFile.type === 'file') {
+      const sharedFile = await client.files.updateFileById(firstFile.id, {
+        sharedLink: {
+          access: 'company',
+          permissions: {
+            canDownload: true
+          }
+        }
+      });
+      console.log(`Shared: ${sharedFile.sharedLink?.url}`);
+    }
+  }
+}
+
+searchAndShare().catch(console.error);
+```
+
+### Example 3: Folder Operations
+
+```typescript
+import { BoxClient, BoxCcgAuth } from 'box/sdk';
+
+async function manageFolders() {
+  const client = new BoxClient({
+    auth: new BoxCcgAuth({
+      clientId: process.env.BOX_CLIENT_ID!,
+      clientSecret: process.env.BOX_CLIENT_SECRET!,
+      enterpriseId: process.env.BOX_ENTERPRISE_ID!
+    })
+  });
+
+  // Create folder structure
+  const projectFolder = await client.folders.createFolder({
+    name: 'Project Alpha',
+    parent: { id: '0' }
+  });
+  console.log(`Created: ${projectFolder.name}`);
+
+  const docsFolder = await client.folders.createFolder({
+    name: 'Documents',
+    parent: { id: projectFolder.id }
+  });
+
+  // Add collaborator
+  await client.collaborations.createCollaboration({
+    item: {
+      type: 'folder',
+      id: projectFolder.id
+    },
+    accessibleBy: {
+      type: 'user',
+      login: 'colleague@example.com'
+    },
+    role: 'editor'
+  });
+
+  console.log('Collaborator added');
+}
+
+manageFolders().catch(console.error);
+```
+
+## DEBUGGING CHECKLIST
+
+When something doesn't work, check:
+
+1. ✓ Using subpath import? (`box/sdk`, NOT `box`)
+2. ✓ Have valid credentials? (check env variables)
+3. ✓ Correct auth method? (CCG, JWT, OAuth, or DevToken)
+4. ✓ Awaiting async calls? (all API calls are async)
+5. ✓ Handling errors? (try-catch blocks)
+6. ✓ Checking error.status? (401, 403, 404, 429)
+7. ✓ Valid file/folder IDs? (check they exist)
+8. ✓ Required permissions? (check Box console settings)
+9. ✓ CLI vs SDK? In-process HTTP API → `box/sdk` and https://github.com/box/box-node-sdk/tree/main/docs ; shell / `box` commands → https://github.com/box/boxcli/tree/main/docs
+
+## COMMON PITFALLS
+
+1. **Importing from root**: `import from 'box'` → ERROR
+   - Solution: Use `import from 'box/sdk'`
+
+2. **Missing await**: `const file = client.files.getFileById(id)`
+   - Solution: `const file = await client.files.getFileById(id)`
+
+3. **Wrong auth method**: Using developer token in production
+   - Solution: Use CCG or JWT for production
+
+4. **Not handling errors**: Code crashes on 404
+   - Solution: Wrap in try-catch, check error.status
+
+5. **Rate limiting**: Making too many requests
+   - Solution: Implement retry with exponential backoff
+
+6. **Wrong folder ID format**: Using '/' or path strings
+   - Solution: Use folder IDs like '0' (root) or '123456789'
+
+## PACKAGE STRUCTURE
+
+This is a **meta-package** (thin umbrella on npm as `box`):
+- **`box/sdk` and `box/sdk/*`** — re-export **`box-node-sdk`** (official Box Node SDK)
+- **`box` binary** — **`@box/cli`** (official Box CLI), same install
+- Zero runtime overhead in the re-export layer (no extra SDK logic in this repo)
+- Version alignment is pinned via this package’s `dependencies`; bump here when rolling out supported upstream combinations
+- Additional Box developer tools may appear as new subpaths or binaries over time; follow release notes in https://github.com/box/npm-box
+
+## MODULE SUPPORT
+
+- ✓ ESM (import/export)
+- ✓ CommonJS (require)
+- ✓ TypeScript (full type definitions)
+- ✓ Node.js >=22.0.0
+- ✓ Browser (ESM builds)
+- ✓ Tree-shaking enabled
+
+## RESOURCES
+
+- This package (`box` on npm) — source and issues: https://github.com/box/npm-box
+- Box Node SDK docs: https://github.com/box/box-node-sdk/tree/main/docs
+- Box CLI docs: https://github.com/box/boxcli/tree/main/docs
+- API Reference: https://developer.box.com/reference/
+- Authentication Guide: https://developer.box.com/guides/authentication/
+- Box Developer Portal: https://developer.box.com/
+
+## SUMMARY FOR AI AGENTS
+
+**Remember these 6 things:**
+
+1. **`box/sdk` = `box-node-sdk`** — same API; never import app code from the `'box'` package root
+2. **Choose correct auth** — CCG for servers, JWT for enterprise, OAuth for users, developer token only for short-lived dev/tests
+3. **Always await** — all API calls are async
+4. **Handle errors** — try/catch and inspect `error.status` where applicable
+5. **Use types** — import from `box/sdk/schemas` (and other `box/sdk/*` modules) for TypeScript
+6. **CLI** — the `box` command comes with this package (`@box/cli`); see Box CLI docs for commands, `box/sdk` for Node API usage
+
+**Quick copy-paste template:**
+
+```typescript
+import { BoxClient, BoxCcgAuth } from 'box/sdk';
+
+const client = new BoxClient({
+  auth: new BoxCcgAuth({
+    clientId: process.env.BOX_CLIENT_ID!,
+    clientSecret: process.env.BOX_CLIENT_SECRET!,
+    enterpriseId: process.env.BOX_ENTERPRISE_ID!
+  })
+});
+
+try {
+  const file = await client.files.getFileById('FILE_ID');
+  console.log(file.name);
+} catch (error: any) {
+  if (error.status === 404) {
+    console.error('File not found');
+  } else {
+    console.error('Error:', error.message);
+  }
+}
+```
+
+---
+
+End of llms.txt - This file contains everything needed to use the Box package.
+For the most up-to-date **Node SDK** API details: https://github.com/box/box-node-sdk/tree/main/docs
+For **Box CLI** commands and flags: https://github.com/box/boxcli/tree/main/docs

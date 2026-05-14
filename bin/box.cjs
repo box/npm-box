@@ -1,0 +1,43 @@
+#!/usr/bin/env node
+
+/**
+ * Box CLI wrapper with telemetry support
+ *
+ * This wrapper sets environment markers before executing the Box CLI,
+ * allowing the CLI to detect it's being used through the box meta-package.
+ */
+
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+// Read package version
+const packageJsonPath = path.join(__dirname, '..', 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+const version = packageJson.version;
+
+// Set telemetry markers
+process.env.NPM_BOX_VERSION = version;
+
+// Path to the actual Box CLI
+const cliPath = path.join(__dirname, '..', 'node_modules', '@box', 'cli', 'bin', 'run');
+
+// Forward all arguments to the CLI
+const args = process.argv.slice(2);
+
+// Spawn the CLI process
+const cli = spawn(process.execPath, [cliPath, ...args], {
+  stdio: 'inherit',
+  env: process.env,
+});
+
+// Forward exit code
+cli.on('exit', (code) => {
+  process.exit(code || 0);
+});
+
+// Handle errors
+cli.on('error', (err) => {
+  console.error('Failed to start Box CLI:', err);
+  process.exit(1);
+});

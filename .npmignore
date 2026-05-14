@@ -1,0 +1,33 @@
+# Development files
+node_modules/
+src/
+*.ts
+!*.d.ts
+tsconfig*.json
+
+# Test files
+test/
+tests/
+**/*.test.*
+**/*.spec.*
+
+# Build artifacts (keep dist/)
+*.log
+*.tsbuildinfo
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
