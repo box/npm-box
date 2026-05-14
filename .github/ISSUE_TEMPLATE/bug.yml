@@ -1,6 +1,6 @@
 name: Bug
 description: Report a bug found in the SDK
-title: ""
+title: "[Bug]: "
 labels: ["bug"]
 assignees:
   - mwwoda

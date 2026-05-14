@@ -1,6 +1,6 @@
 name: Question
 description: Ask a question about usage or implementation
-title: ""
+title: "[Question]: "
 labels: ["question"]
 assignees:
   - mwwoda
