@@ -1,5 +1,5 @@
 /**
- * Pure re-export of box-node-sdk with zero side effects.
+ * Re-export of box-node-sdk with telemetry initialization.
  * Enables tree-shaking when used with modern bundlers.
  *
  * Main exports from the SDK root:
@@ -19,6 +19,9 @@
  *
  * @packageDocumentation
  */
+
+// Initialize telemetry markers for box-node-sdk to detect bundle usage
+import '../telemetry.js';
 
 // Re-export all named exports from box-node-sdk main entry point
 export * from 'box-node-sdk';

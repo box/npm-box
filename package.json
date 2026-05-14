@@ -7,7 +7,12 @@
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "browser": "./dist/esm/index.js",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/esm/telemetry.js",
+    "./dist/esm/sdk/*.js",
+    "./dist/cjs/telemetry.js",
+    "./dist/cjs/sdk/*.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
@@ -73,6 +78,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "prebuild": "node scripts/prebuild.cjs",
     "build": "npm run build:esm && npm run build:cjs && npm run build:types",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
