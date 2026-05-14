@@ -125,7 +125,7 @@ Command and topic guides live in the [Box CLI docs](https://github.com/box/boxcl
 
 - **Dual ESM/CJS support** - Works with both `import` and `require()`
 - **Full TypeScript support** - Complete type definitions
-- **Tree-shaking compatible** - Excellent tree-shaking: type imports (0 bytes), auth classes (~67 KB), specific managers (~91 KB), vs full BoxClient (845 KB). See [TREE-SHAKING-REPORT.md](./TREE-SHAKING-REPORT.md)
+- **Tree-shaking compatible** - Excellent tree-shaking: type imports (0 bytes), auth classes (~67 KB), specific managers (~91 KB), vs full BoxClient (845 KB).
 - **Browser compatible** - ESM builds work in modern browsers
 - **Zero runtime overhead** - Pure re-exports of official packages
 

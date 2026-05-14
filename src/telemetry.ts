@@ -29,5 +29,6 @@ if (typeof process !== 'undefined' && process.env) {
 
 // Browser/Universal environment
 if (typeof globalThis !== 'undefined') {
+  // eslint-disable-next-line
   (globalThis as any).__BOX_PACKAGE_VERSION = VERSION;
 }

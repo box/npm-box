@@ -110,16 +110,15 @@
     "url": "https://github.com/box/npm-box/issues"
   },
   "dependencies": {
-    "box-node-sdk": "^10.9.0",
-    "@box/cli": "^4.8.0"
+    "@box/cli": "^4.8.0",
+    "box-node-sdk": "^10.9.0"
   },
   "devDependencies": {
     "@types/node": "^25.7.0",
-    "@typescript-eslint/eslint-plugin": "^8.59.3",
-    "@typescript-eslint/parser": "^8.59.3",
     "eslint": "^10.3.0",
     "jest": "^30.4.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.3"
   },
   "files": [
     "dist",
