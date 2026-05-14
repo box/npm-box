@@ -1,0 +1,115 @@
+name: Bug
+description: Report a bug found in the SDK
+title: ""
+labels: ["bug"]
+assignees:
+  - mwwoda
+  - mhagmajer
+  - arjankowski
+  - lukaszsocha2
+  - bartlomiejleszczynski
+  - congminh1254
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the form below.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting, I have checked that...
+      options:
+        - label: I have checked that the [SDK documentation](https://github.com/box/npm-box/tree/main/docs) doesn't solve my issue.
+          required: true
+        - label: I have checked that the [API documentation](https://developer.box.com/docs) doesn't solve my issue.
+          required: true
+        - label: I have searched the [Box Developer Forums](https://community.box.com/box-platform-5) and my issue isn't already reported (or if it has been reported, I have attached a link to it, for reference).
+          required: true
+        - label: I have searched [Issues in this repo](https://github.com/box/npm-box/search?type=Issues) and my issue isn't already reported.
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the Issue
+      description: |
+        Please include as much detail as possible to help us troubleshoot!
+        If it isn't obvious, please include how the behavior you expect differs from what actually happened.
+        This is really important so we know how to start troubleshooting your issue.
+      placeholder: Replace this text with a description of what problem you're having.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: |
+        Please include detailed steps to reproduce the issue you're seeing, if possible.
+        If you don't have a reproducible error, please make sure that you give us as much detail as you can about what your application was doing when the error occurred.
+        Good steps to reproduce the problem help speed up debugging for us and gets your issue resolved sooner!
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Message, Including Stack Trace
+      description: |
+        Share the full error output you're seeing, if applicable.
+        Please include the full stack trace to help us identify where the error is happening.
+      placeholder: Paste the error message and stack trace here...
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: Drag and drop screenshots here...
+    validations:
+      required: false
+
+  - type: input
+    id: sdk-version
+    attributes:
+      label: Typescript SDK Version
+      description: Which version of the npm-box SDK are you using?
+      placeholder: e.g., 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: What platform are you using?
+      placeholder: e.g., Node.js, Javascript (Browser), React Native, etc.
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version (if applicable)
+      description: Which version of Node.js is your application running on?
+      placeholder: e.g., 18.0.0
+    validations:
+      required: false
