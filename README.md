@@ -114,7 +114,7 @@ This package also includes the Box CLI:
 npx box --help
 ```
 
-Command and topic guides live in the [Box CLI docs](https://github.com/box/boxcli/tree/main/docs) in the upstream repo.
+Command and topic guides live in the [Box CLI docs](https://github.com/box/boxcli/tree/main/docs) in the upstream repo. For **authentication** (developer token, JWT, CCG, OAuth, `box login`, environments), follow [Authentication in the Box CLI](https://github.com/box/boxcli/blob/main/docs/authentication.md).
 
 ## Requirements
 
@@ -125,7 +125,7 @@ Command and topic guides live in the [Box CLI docs](https://github.com/box/boxcl
 
 - **Dual ESM/CJS support** - Works with both `import` and `require()`
 - **Full TypeScript support** - Complete type definitions
-- **Tree-shaking compatible** - Only bundle what you use
+- **Tree-shaking compatible** - Excellent tree-shaking: type imports (0 bytes), auth classes (~67 KB), specific managers (~91 KB), vs full BoxClient (845 KB). See [TREE-SHAKING-REPORT.md](./TREE-SHAKING-REPORT.md)
 - **Browser compatible** - ESM builds work in modern browsers
 - **Zero runtime overhead** - Pure re-exports of official packages
 
