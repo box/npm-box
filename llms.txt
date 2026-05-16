@@ -42,6 +42,33 @@ const file = await client.files.getFileById('123456789');
 console.log(`File: ${file.name}`);
 ```
 
+## IMPORTANT: API PARAMETER STRUCTURE
+
+Box Node SDK v10 uses a structured parameter pattern:
+
+- **Request bodies** (create/update operations): Pass as direct parameter OR wrap in `{ requestBody: {...} }`
+- **Query parameters** (filters, pagination): Wrap in `{ queryParams: {...} }`
+- **Headers** (custom headers): Wrap in `{ headers: {...} }`
+
+Examples:
+```typescript
+// Update file - requires requestBody wrapper
+await client.files.updateFileById('FILE_ID', {
+  requestBody: { name: 'new-name.pdf' }
+});
+
+// Get file with fields - requires queryParams wrapper
+await client.files.getFileById('FILE_ID', {
+  queryParams: { fields: ['name', 'size'] }
+});
+
+// Create folder - direct parameter (no wrapper)
+await client.folders.createFolder({
+  name: 'New Folder',
+  parent: { id: '0' }
+});
+```
+
 ## IMPORT PATTERNS
 
 ### ✅ CORRECT (Always do this)
@@ -162,7 +189,9 @@ console.log(`Name: ${file.name}, Size: ${file.size}`);
 
 // Get file with specific fields
 const fileWithFields = await client.files.getFileById('FILE_ID', {
-  fields: ['name', 'size', 'modified_at', 'created_by']
+  queryParams: {
+    fields: ['name', 'size', 'modified_at', 'created_by']
+  }
 });
 
 // Upload file
@@ -182,8 +211,10 @@ const fileContent = await client.downloads.downloadFile('FILE_ID');
 
 // Update file
 const updated = await client.files.updateFileById('FILE_ID', {
-  name: 'new-name.pdf',
-  description: 'Updated via API'
+  requestBody: {
+    name: 'new-name.pdf',
+    description: 'Updated via API'
+  }
 });
 
 // Delete file
@@ -197,7 +228,9 @@ const copied = await client.files.copyFile('FILE_ID', {
 
 // Move file (update parent)
 await client.files.updateFileById('FILE_ID', {
-  parent: { id: 'NEW_FOLDER_ID' }
+  requestBody: {
+    parent: { id: 'NEW_FOLDER_ID' }
+  }
 });
 
 // Get file versions
@@ -212,9 +245,11 @@ for (const version of versions.entries || []) {
 ```typescript
 // List folder contents
 const items = await client.folders.getFolderItems('FOLDER_ID', {
-  limit: 100,
-  offset: 0,
-  fields: ['name', 'type', 'size']
+  queryParams: {
+    limit: 100,
+    offset: 0,
+    fields: ['name', 'type', 'size']
+  }
 });
 for (const item of items.entries || []) {
   console.log(`${item.type}: ${item.name} (${item.id})`);
@@ -228,8 +263,10 @@ const folder = await client.folders.createFolder({
 
 // Update folder
 const updated = await client.folders.updateFolderById('FOLDER_ID', {
-  name: 'Renamed Folder',
-  description: 'New description'
+  requestBody: {
+    name: 'Renamed Folder',
+    description: 'New description'
+  }
 });
 
 // Delete folder (must be empty)
@@ -237,7 +274,9 @@ await client.folders.deleteFolderById('FOLDER_ID');
 
 // Delete folder and contents
 await client.folders.deleteFolderById('FOLDER_ID', {
-  recursive: true
+  queryParams: {
+    recursive: true
+  }
 });
 
 // Copy folder
@@ -251,7 +290,7 @@ const copied = await client.folders.copyFolder('FOLDER_ID', {
 
 ```typescript
 // Basic search
-const results = await client.search.searchByQuery({
+const results = await client.search.searchForContent({
   query: 'quarterly report',
   limit: 20
 });
@@ -260,13 +299,13 @@ for (const item of results.entries || []) {
 }
 
 // Advanced search
-const results = await client.search.searchByQuery({
+const results = await client.search.searchForContent({
   query: 'contract',
   fileExtensions: ['pdf', 'docx'],
   ancestorFolderIds: ['FOLDER_ID'],  // Search within folder
   contentTypes: ['name', 'description', 'file_content'],
   createdAtRange: ['2024-01-01T00:00:00Z', '2024-12-31T23:59:59Z'],
-  size: { gte: 1000000 },  // Files >= 1MB
+  sizeRange: ['1000000', ''],  // Files >= 1MB
   ownerUserIds: ['USER_ID']
 });
 ```
@@ -276,20 +315,23 @@ const results = await client.search.searchByQuery({
 ```typescript
 // Create shared link
 const file = await client.files.updateFileById('FILE_ID', {
-  sharedLink: {
-    access: 'open',  // 'open', 'company', 'collaborators'
-    permissions: {
-      canDownload: true,
-      canPreview: true
-    },
-    unsharedAt: '2024-12-31T23:59:59Z'  // Optional expiration
+  requestBody: {
+    sharedLink: {
+      access: 'open',  // 'open', 'company', 'collaborators'
+      permissions: {
+        canDownload: true
+      },
+      unsharedAt: '2024-12-31T23:59:59Z'  // Optional expiration
+    }
   }
 });
 console.log('Shared link:', file.sharedLink?.url);
 
 // Remove shared link
 await client.files.updateFileById('FILE_ID', {
-  sharedLink: null
+  requestBody: {
+    sharedLink: null
+  }
 });
 
 // Get item from shared link
@@ -302,7 +344,7 @@ const item = await client.sharedLinks.getSharedItem({
 
 ```typescript
 // Add collaborator to folder
-const collab = await client.collaborations.createCollaboration({
+const collab = await client.userCollaborations.createCollaboration({
   item: {
     type: 'folder',
     id: 'FOLDER_ID'
@@ -315,13 +357,18 @@ const collab = await client.collaborations.createCollaboration({
 });
 
 // List folder collaborations
-const collabs = await client.folders.getFolderCollaborations('FOLDER_ID');
+const collabs = await client.listCollaborations.getCollaborations({
+  item: {
+    type: 'folder',
+    id: 'FOLDER_ID'
+  }
+});
 for (const c of collabs.entries || []) {
   console.log(`${c.accessibleBy?.name}: ${c.role}`);
 }
 
 // Remove collaboration
-await client.collaborations.deleteCollaborationById('COLLAB_ID');
+await client.userCollaborations.deleteCollaborationById('COLLAB_ID');
 ```
 
 ### User Management
@@ -349,7 +396,7 @@ const newUser = await client.users.createUser({
 
 ```typescript
 // Add metadata to file
-await client.files.createFileMetadataById(
+await client.fileMetadata.createFileMetadataById(
   'FILE_ID',
   'enterprise',
   'templateKey',
@@ -361,14 +408,14 @@ await client.files.createFileMetadataById(
 );
 
 // Get metadata
-const metadata = await client.files.getFileMetadataById(
+const metadata = await client.fileMetadata.getFileMetadataById(
   'FILE_ID',
   'enterprise',
   'templateKey'
 );
 
 // Update metadata
-await client.files.updateFileMetadataById(
+await client.fileMetadata.updateFileMetadataById(
   'FILE_ID',
   'enterprise',
   'templateKey',
@@ -411,7 +458,8 @@ const task = await client.tasks.createTask({
 });
 
 // Assign task
-await client.tasks.createTaskAssignment(task.id, {
+await client.taskAssignments.createTaskAssignment({
+  task: { id: task.id, type: 'task' },
   assignTo: { id: 'USER_ID' }
 });
 
@@ -422,7 +470,7 @@ const comment = await client.comments.createComment({
 });
 
 // Get file comments
-const comments = await client.files.getFileComments('FILE_ID');
+const comments = await client.comments.getFileComments('FILE_ID');
 ```
 
 ## ERROR HANDLING
@@ -572,7 +620,9 @@ async function main() {
   console.log(`Hello, ${user.name}!`);
 
   // List files in root
-  const items = await client.folders.getFolderItems('0', { limit: 10 });
+  const items = await client.folders.getFolderItems('0', {
+    queryParams: { limit: 10 }
+  });
   console.log('\nYour files:');
   for (const item of items.entries || []) {
     console.log(`  ${item.type}: ${item.name}`);
@@ -608,7 +658,7 @@ async function searchAndShare() {
   });
 
   // Search for PDF contracts
-  const results = await client.search.searchByQuery({
+  const results = await client.search.searchForContent({
     query: 'contract',
     fileExtensions: ['pdf'],
     limit: 5
@@ -621,10 +671,12 @@ async function searchAndShare() {
     const firstFile = results.entries[0];
     if (firstFile.type === 'file') {
       const sharedFile = await client.files.updateFileById(firstFile.id, {
-        sharedLink: {
-          access: 'company',
-          permissions: {
-            canDownload: true
+        requestBody: {
+          sharedLink: {
+            access: 'company',
+            permissions: {
+              canDownload: true
+            }
           }
         }
       });
@@ -663,7 +715,7 @@ async function manageFolders() {
   });
 
   // Add collaborator
-  await client.collaborations.createCollaboration({
+  await client.userCollaborations.createCollaboration({
     item: {
       type: 'folder',
       id: projectFolder.id
@@ -693,7 +745,8 @@ When something doesn't work, check:
 6. ✓ Checking error.status? (401, 403, 404, 429)
 7. ✓ Valid file/folder IDs? (check they exist)
 8. ✓ Required permissions? (check Box console settings)
-9. ✓ CLI vs SDK? In-process HTTP API → `box/sdk` and https://github.com/box/box-node-sdk/tree/main/docs ; shell / `box` commands → https://github.com/box/boxcli/tree/main/docs
+9. ✓ Using correct parameter structure? Most update methods require `{ requestBody: {...} }`, query params need `{ queryParams: {...} }`
+10. ✓ CLI vs SDK? In-process HTTP API → `box/sdk` and https://github.com/box/box-node-sdk/tree/main/docs ; shell / `box` commands → https://github.com/box/boxcli/tree/main/docs
 
 ## COMMON PITFALLS
 
@@ -714,6 +767,12 @@ When something doesn't work, check:
 
 6. **Wrong folder ID format**: Using '/' or path strings
    - Solution: Use folder IDs like '0' (root) or '123456789'
+
+7. **Wrong parameter structure**: Passing options directly instead of wrapped
+   - Solution: Update methods need `{ requestBody: {...} }`, queries need `{ queryParams: {...} }`
+
+8. **Wrong manager name**: Using `client.collaborations` instead of `client.userCollaborations`
+   - Solution: Check the correct manager names - `userCollaborations`, `fileMetadata`, `comments`, etc.
 
 ## PACKAGE STRUCTURE
 
