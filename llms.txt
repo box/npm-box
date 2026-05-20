@@ -25,14 +25,15 @@ ALWAYS use subpath imports: `'box/sdk'`, `'box/sdk/managers'`, etc.
 // yarn add box
 
 // Step 2: Import (ALWAYS from subpath — same as box-node-sdk)
-import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { BoxClient, BoxCcgAuth, CcgConfig } from 'box/sdk';
 
-// Step 3: Authenticate
-const auth = new BoxCcgAuth({
+// Step 3: Authenticate (create config first, then auth)
+const config = new CcgConfig({
   clientId: process.env.BOX_CLIENT_ID!,
   clientSecret: process.env.BOX_CLIENT_SECRET!,
   enterpriseId: process.env.BOX_ENTERPRISE_ID!
 });
+const auth = new BoxCcgAuth({ config });
 
 // Step 4: Create client
 const client = new BoxClient({ auth });
@@ -73,7 +74,7 @@ await client.folders.createFolder({
 
 ### ✅ CORRECT (Always do this)
 ```typescript
-import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { BoxClient, BoxCcgAuth, CcgConfig } from 'box/sdk';
 import { FilesManager } from 'box/sdk/managers';
 import type { File, Folder } from 'box/sdk/schemas';
 ```
@@ -100,7 +101,7 @@ For programmatic access to Box APIs in Node/TypeScript, use **`box/sdk`**, not C
 
 | Import Path | What It Exports | When to Use |
 |-------------|----------------|-------------|
-| box/sdk | BoxClient, BoxCcgAuth, BoxJwtAuth, BoxDeveloperTokenAuth, BoxOAuth | ALWAYS - Main entry point |
+| box/sdk | BoxClient, BoxCcgAuth, CcgConfig, BoxJwtAuth, JwtConfig, BoxDeveloperTokenAuth, BoxOAuth, OAuthConfig | ALWAYS - Main entry point |
 | box/sdk/managers | FilesManager, FoldersManager, UsersManager, SearchManager, etc. | TypeScript: type annotations for managers |
 | box/sdk/schemas | File, Folder, User, FileVersion, etc. | TypeScript: type annotations for data models |
 | box/sdk/parameters | GetFileByIdParams, UploadFileParams, etc. | TypeScript: type annotations for API params |
@@ -114,24 +115,25 @@ For programmatic access to Box APIs in Node/TypeScript, use **`box/sdk`**, not C
 **Use for**: Server-to-server integrations
 
 ```typescript
-import { BoxCcgAuth } from 'box/sdk';
+import { BoxCcgAuth, CcgConfig } from 'box/sdk';
 
-const auth = new BoxCcgAuth({
+const config = new CcgConfig({
   clientId: 'your_client_id',
   clientSecret: 'your_client_secret',
   enterpriseId: 'your_enterprise_id',
   // Optional: act as specific user
   userId: 'user_id'
 });
+const auth = new BoxCcgAuth({ config });
 ```
 
 ### 2. JWT Authentication
 **Use for**: Enterprise-wide access, service accounts
 
 ```typescript
-import { BoxJwtAuth } from 'box/sdk';
+import { BoxJwtAuth, JwtConfig } from 'box/sdk';
 
-const auth = new BoxJwtAuth({
+const config = new JwtConfig({
   clientId: 'your_client_id',
   clientSecret: 'your_client_secret',
   enterpriseId: 'your_enterprise_id',
@@ -139,6 +141,7 @@ const auth = new BoxJwtAuth({
   privateKey: 'your_private_key',
   privateKeyPassphrase: 'your_passphrase'
 });
+const auth = new BoxJwtAuth({ config });
 ```
 
 ### 3. Developer Token
@@ -156,12 +159,13 @@ const auth = new BoxDeveloperTokenAuth({
 **Use for**: User-facing applications, web apps
 
 ```typescript
-import { BoxOAuth } from 'box/sdk';
+import { BoxOAuth, OAuthConfig } from 'box/sdk';
 
-const oauth = new BoxOAuth({
+const config = new OAuthConfig({
   clientId: 'your_client_id',
   clientSecret: 'your_client_secret'
 });
+const oauth = new BoxOAuth({ config });
 
 // Get authorization URL
 const authUrl = oauth.getAuthorizeUrl({
@@ -171,8 +175,7 @@ const authUrl = oauth.getAuthorizeUrl({
 
 // After user authorizes, exchange code for tokens
 const tokens = await oauth.getTokensAuthorizationCodeGrant(
-  'authorization_code',
-  'client_id'
+  'authorization_code'
 );
 
 const client = new BoxClient({ auth: oauth });
@@ -602,18 +605,17 @@ async function processItems<T extends BoxItem>(
 ### Example 1: List and Upload Files
 
 ```typescript
-import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { BoxClient, BoxCcgAuth, CcgConfig } from 'box/sdk';
 import { readFileSync } from 'fs';
 
 async function main() {
   // Setup client
-  const client = new BoxClient({
-    auth: new BoxCcgAuth({
-      clientId: process.env.BOX_CLIENT_ID!,
-      clientSecret: process.env.BOX_CLIENT_SECRET!,
-      enterpriseId: process.env.BOX_ENTERPRISE_ID!
-    })
+  const config = new CcgConfig({
+    clientId: process.env.BOX_CLIENT_ID!,
+    clientSecret: process.env.BOX_CLIENT_SECRET!,
+    enterpriseId: process.env.BOX_ENTERPRISE_ID!
   });
+  const client = new BoxClient({ auth: new BoxCcgAuth({ config }) });
 
   // Get current user
   const user = await client.users.getUserMe();
@@ -646,16 +648,15 @@ main().catch(console.error);
 ### Example 2: Search and Share
 
 ```typescript
-import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { BoxClient, BoxCcgAuth, CcgConfig } from 'box/sdk';
 
 async function searchAndShare() {
-  const client = new BoxClient({
-    auth: new BoxCcgAuth({
-      clientId: process.env.BOX_CLIENT_ID!,
-      clientSecret: process.env.BOX_CLIENT_SECRET!,
-      enterpriseId: process.env.BOX_ENTERPRISE_ID!
-    })
+  const config = new CcgConfig({
+    clientId: process.env.BOX_CLIENT_ID!,
+    clientSecret: process.env.BOX_CLIENT_SECRET!,
+    enterpriseId: process.env.BOX_ENTERPRISE_ID!
   });
+  const client = new BoxClient({ auth: new BoxCcgAuth({ config }) });
 
   // Search for PDF contracts
   const results = await client.search.searchForContent({
@@ -691,16 +692,15 @@ searchAndShare().catch(console.error);
 ### Example 3: Folder Operations
 
 ```typescript
-import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { BoxClient, BoxCcgAuth, CcgConfig } from 'box/sdk';
 
 async function manageFolders() {
-  const client = new BoxClient({
-    auth: new BoxCcgAuth({
-      clientId: process.env.BOX_CLIENT_ID!,
-      clientSecret: process.env.BOX_CLIENT_SECRET!,
-      enterpriseId: process.env.BOX_ENTERPRISE_ID!
-    })
+  const config = new CcgConfig({
+    clientId: process.env.BOX_CLIENT_ID!,
+    clientSecret: process.env.BOX_CLIENT_SECRET!,
+    enterpriseId: process.env.BOX_ENTERPRISE_ID!
   });
+  const client = new BoxClient({ auth: new BoxCcgAuth({ config }) });
 
   // Create folder structure
   const projectFolder = await client.folders.createFolder({
@@ -815,15 +815,14 @@ This is a **meta-package** (thin umbrella on npm as `box`):
 **Quick copy-paste template:**
 
 ```typescript
-import { BoxClient, BoxCcgAuth } from 'box/sdk';
+import { BoxClient, BoxCcgAuth, CcgConfig } from 'box/sdk';
 
-const client = new BoxClient({
-  auth: new BoxCcgAuth({
-    clientId: process.env.BOX_CLIENT_ID!,
-    clientSecret: process.env.BOX_CLIENT_SECRET!,
-    enterpriseId: process.env.BOX_ENTERPRISE_ID!
-  })
+const config = new CcgConfig({
+  clientId: process.env.BOX_CLIENT_ID!,
+  clientSecret: process.env.BOX_CLIENT_SECRET!,
+  enterpriseId: process.env.BOX_ENTERPRISE_ID!
 });
+const client = new BoxClient({ auth: new BoxCcgAuth({ config }) });
 
 try {
   const file = await client.files.getFileById('FILE_ID');
