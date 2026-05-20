@@ -2,34 +2,17 @@ import { execSync } from 'child_process';
 import { writeFileSync, unlinkSync, readFileSync, mkdtempSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { Readable } from 'stream';
+import { createClient } from './utils';
 
-const { BoxClient, BoxJwtAuth, JwtConfig } = require('box/sdk');
-
-if (!process.env.JWT_CONFIG_BASE_64) {
-  throw new Error(
-    'JWT_CONFIG_BASE_64 environment variable is required to run integration tests'
-  );
-}
-
-function createClient() {
-  const configJson = Buffer.from(
-    process.env.JWT_CONFIG_BASE_64!,
-    'base64'
-  ).toString('utf-8');
-  const jwtConfig = JwtConfig.fromConfigJsonString(configJson);
-  const auth = new BoxJwtAuth({ config: jwtConfig });
-  return { client: new BoxClient({ auth }), auth };
-}
+const { BoxClient } = require('box/sdk');
 
 describe('Integration: CLI wrapper with SDK token', () => {
   let token: string;
   let client: typeof BoxClient;
 
   beforeAll(async () => {
-    const { client: c, auth } = createClient();
-    client = c;
-    const accessToken = await auth.retrieveToken();
+    client = createClient();
+    const accessToken = await client.auth.retrieveToken();
     token = accessToken.accessToken;
   });
 
