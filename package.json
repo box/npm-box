@@ -86,6 +86,7 @@
     "postbuild": "node scripts/postbuild.cjs",
     "postinstall": "node scripts/postinstall.js",
     "test": "jest",
+    "test:integration": "jest --config jest.integration.config.ts",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
