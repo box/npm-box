@@ -25,6 +25,14 @@ const cliPath = path.join(__dirname, '..', 'node_modules', '@box', 'cli', 'bin',
 // Forward all arguments to the CLI
 const args = process.argv.slice(2);
 
+// Intercept the 'update' command — it cannot update this wrapper package
+if (args[0] === 'update') {
+  console.log(`To update box (current: v${version}), run one of:\n`);
+  console.log('  npx box@latest <command>    Always use the latest version');
+  console.log('  npm install -g box          Update your global installation');
+  process.exit(0);
+}
+
 // Spawn the CLI process
 const cli = spawn(process.execPath, [cliPath, ...args], {
   stdio: 'inherit',
