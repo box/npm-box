@@ -86,6 +86,7 @@
     "postbuild": "node scripts/postbuild.cjs",
     "postinstall": "node scripts/postinstall.js",
     "test": "jest",
+    "test:integration": "jest --config jest.integration.config.ts",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
@@ -114,10 +115,12 @@
     "box-node-sdk": "^10.10.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
     "@babel/preset-env": "^7.29.5",
     "@babel/preset-typescript": "^7.28.5",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.7.0",
+    "babel-jest": "^30.4.1",
     "eslint": "^10.3.0",
     "jest": "^30.4.2",
     "typescript": "^6.0.3",

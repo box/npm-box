@@ -1,8 +1,7 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-  testMatch: ['<rootDir>/tests/**/*.test.ts'],
-  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/integration/'],
+  testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
   transform: {
     '\\.[jt]sx?$': [
       'babel-jest',

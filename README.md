@@ -9,6 +9,7 @@ Curated meta-package for building on Box with JavaScript and TypeScript: one ins
 
 - [Box](#box)
   - [Installation](#installation)
+  - [Prerequisites](#prerequisites)
   - [Getting Started](#getting-started)
   - [Usage](#usage)
     - [Import from `box`](#import-from-box)
@@ -38,6 +39,20 @@ npm install box
 ```bash
 yarn add box
 ```
+
+## Prerequisites
+
+Before using this package, you need:
+
+1. **A Box account** - If you don't have one, you can create a free developer account at [developer.box.com](https://developer.box.com/)
+2. **A Box Platform App** - Create one at [Box Developer Console](https://app.box.com/developers/console)
+3. **Authentication credentials** - Choose based on use case:
+   - **Developer Token**: Quick testing (expires in 60 minutes) - Generate in Developer Console → Configuration → Developer Token
+   - **OAuth 2.0**: User-based authentication for apps where users sign in with Box. Ideal for web or mobile integrations.
+   - **Server Auth – JWT**: Server account authentication without user sign-in. Ideal for automations and backend systems.
+   - **Client Credentials Grant**: Server account authentication with its own account to grant permissions. Ideal for internal tools and data pipelines.
+
+For detailed setup instructions, see the [Box Authentication Documentation](https://developer.box.com/guides/authentication/).
 
 ## Getting Started
 
