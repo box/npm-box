@@ -111,7 +111,7 @@
     "url": "https://github.com/box/npm-box/issues"
   },
   "dependencies": {
-    "@box/cli": "^4.8.1",
+    "@box/cli": "^4.8.2",
     "box-node-sdk": "^10.10.0"
   },
   "devDependencies": {
