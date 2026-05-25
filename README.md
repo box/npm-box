@@ -100,7 +100,7 @@ import { BoxClient } from 'box/sdk';
 | `box/sdk/serialization` | Serialization and deserialization utilities |
 | `box/sdk/internal` | Internal utilities (advanced use) |
 
-### Box SDK (Node.js)
+### Box SDK (Node / Browser compatible)
 
 The official **[Box Node SDK](https://github.com/box/box-node-sdk)** (`box-node-sdk`) is re-exported from **`box/sdk`**. The other `box/sdk/*` paths in the table above map to the same SDK (managers, schemas, parameters, and so on).
 
@@ -108,8 +108,11 @@ The official **[Box Node SDK](https://github.com/box/box-node-sdk)** (`box-node-
 ```typescript
 import { BoxClient, BoxDeveloperTokenAuth } from 'box/sdk';
 
+// Get a developer token from: https://app.box.com/developers/console
+// Navigate to the app → Look at the Right hand side → Generate Developer Token
+const token = process.env.BOX_DEVELOPER_TOKEN; // Store in .env file, NEVER commit!
+
 async function main() {
-  const token = '<YOUR_DEVELOPER_TOKEN>';
   const auth = new BoxDeveloperTokenAuth({ token });
   const client = new BoxClient({ auth });
   const entries = (await client.folders.getFolderItems('0')).entries;
@@ -119,7 +122,7 @@ async function main() {
 void main();
 ```
 
-Replace the placeholder with **a real developer token**, or use another `*Auth` class from `box/sdk` (for example `BoxCcgAuth`, `BoxJwtAuth`) as in the [Box Node SDK docs](https://github.com/box/box-node-sdk/tree/main/docs).
+For production use, choose another `*Auth` class from `box/sdk` (for example `BoxCcgAuth`, `BoxJwtAuth`) as in the [Box Node SDK docs](https://github.com/box/box-node-sdk/tree/main/docs).
 
 ## CLI Tool
 
