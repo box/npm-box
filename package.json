@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Unified entry point for Box JavaScript/TypeScript development tools - SDK and CLI",
   "type": "module",
   "main": "./dist/cjs/index.js",
