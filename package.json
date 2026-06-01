@@ -1,6 +1,6 @@
 {
   "name": "box",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Unified entry point for Box JavaScript/TypeScript development tools - SDK and CLI",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -111,7 +111,7 @@
     "url": "https://github.com/box/npm-box/issues"
   },
   "dependencies": {
-    "@box/cli": "^4.8.2",
+    "@box/cli": "^4.9.2",
     "box-node-sdk": "^10.10.0"
   },
   "devDependencies": {
