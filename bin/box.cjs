@@ -20,7 +20,8 @@ const version = packageJson.version;
 process.env.NPM_BOX_VERSION = version;
 
 // Path to the actual Box CLI
-const cliPath = path.join(__dirname, '..', 'node_modules', '@box', 'cli', 'bin', 'run');
+const cliDir = path.dirname(require.resolve('@box/cli/package.json'));
+const cliPath = path.join(cliDir, 'bin', 'run');
 
 // Forward all arguments to the CLI
 const args = process.argv.slice(2);
