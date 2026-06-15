@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### New Features and Enhancements
 
-* bump box-node-sdk to version 10.12.0 ([#22](https://github.com/box/npm-box/issues/22)) ([f792690](https://github.com/box/npm-box/commit/f792690fb27fb9819e12de0960d2294f265ae8e1))
+* bump `box-node-sdk` to version 10.12.0 ([#22](https://github.com/box/npm-box/issues/22)) ([f792690](https://github.com/box/npm-box/commit/f792690fb27fb9819e12de0960d2294f265ae8e1))
 
 ### [1.0.2](https://github.com/box/npm-box/compare/v1.0.0...v1.0.2) (2026-06-01)
 
