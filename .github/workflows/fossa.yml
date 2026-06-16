@@ -2,9 +2,12 @@ name: FOSSA Scan
 
 on:
   push:
-    branches: [main]
+    branches: [main, combined-sdk]
   pull_request:
-    branches: [main]
+    branches: [main, combined-sdk]
+
+permissions:
+  contents: read
 
 jobs:
   fossa:
@@ -16,4 +19,4 @@ jobs:
       - uses: fossas/fossa-action@main
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
-          branch: ${{ github.ref_name }}
+          branch: ${{ github.head_ref || github.ref_name }}
