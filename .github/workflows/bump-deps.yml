@@ -1,0 +1,97 @@
+name: Bump dependency on upstream release
+
+on:
+  repository_dispatch:
+    types:
+      - sdk-release
+      - cli-release
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Determine bump details
+        id: bump
+        run: |
+          EVENT_TYPE="${{ github.event.action }}"
+          NEW_VERSION="${{ github.event.client_payload.version }}"
+          REPO="${{ github.event.client_payload.repository }}"
+
+          # Strip leading 'v' if present
+          NEW_VERSION="${NEW_VERSION#v}"
+
+          if [ "$EVENT_TYPE" = "sdk-release" ]; then
+            PKG_NAME="box-node-sdk"
+          elif [ "$EVENT_TYPE" = "cli-release" ]; then
+            PKG_NAME="@box/cli"
+          else
+            echo "Unknown event type: $EVENT_TYPE"
+            exit 1
+          fi
+
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -e "const pkg = JSON.parse(require('fs').readFileSync('package.json','utf8')); console.log(pkg.dependencies['$PKG_NAME'].replace(/[\^~]/, ''))")
+
+          # Determine bump type by comparing semver components
+          CUR_MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+          CUR_MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
+          CUR_PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+
+          NEW_MAJOR=$(echo "$NEW_VERSION" | cut -d. -f1)
+          NEW_MINOR=$(echo "$NEW_VERSION" | cut -d. -f2)
+          NEW_PATCH=$(echo "$NEW_VERSION" | cut -d. -f3)
+
+          if [ "$NEW_MAJOR" -gt "$CUR_MAJOR" ]; then
+            BUMP_TYPE="major"
+            COMMIT_PREFIX="feat!"
+          elif [ "$NEW_MINOR" -gt "$CUR_MINOR" ]; then
+            BUMP_TYPE="minor"
+            COMMIT_PREFIX="feat"
+          else
+            BUMP_TYPE="patch"
+            COMMIT_PREFIX="fix"
+          fi
+
+          echo "pkg_name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "bump_type=$BUMP_TYPE" >> "$GITHUB_OUTPUT"
+          echo "commit_prefix=$COMMIT_PREFIX" >> "$GITHUB_OUTPUT"
+          echo "branch=bump/$PKG_NAME-$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update dependency in package.json
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies['${{ steps.bump.outputs.pkg_name }}'] = '^${{ steps.bump.outputs.new_version }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.bump.outputs.branch }}
+          commit-message: "${{ steps.bump.outputs.commit_prefix }}: bump ${{ steps.bump.outputs.pkg_name }} to ${{ steps.bump.outputs.new_version }}"
+          title: "${{ steps.bump.outputs.commit_prefix }}: bump ${{ steps.bump.outputs.pkg_name }} to ${{ steps.bump.outputs.new_version }}"
+          body: |
+            Automated dependency bump triggered by a new release of `${{ steps.bump.outputs.pkg_name }}`.
+
+            - **Package:** `${{ steps.bump.outputs.pkg_name }}`
+            - **New version:** `${{ steps.bump.outputs.new_version }}`
+            - **Bump type:** `${{ steps.bump.outputs.bump_type }}`
+            - **Source:** ${{ github.event.client_payload.repository }}
+          labels: dependencies
