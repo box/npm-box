@@ -1,4 +1,15 @@
+<p align="center">
+  <img src="https://github.com/box/sdks/blob/master/images/box-dev-logo.png" alt= "box-dev-logo" width="30%" height="50%">
+</p>
+
 # Box
+
+[![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
+![build](https://github.com/box/npm-box/actions/workflows/ci.yml/badge.svg)
+[![npm version](https://badge.fury.io/js/box.svg)](https://badge.fury.io/js/box)
+[![image](https://img.shields.io/npm/dm/box.svg)](https://badge.fury.io/js/box)
+![Platform](https://img.shields.io/badge/node-%3E%3D22-blue)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 Curated meta-package for building on Box with JavaScript and TypeScript: one install surface anchored on the official SDK (and CLI), structured so additional Box developer tools can ship here over time.
 
